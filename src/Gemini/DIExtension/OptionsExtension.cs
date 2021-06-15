@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 public static class OptionsExtension
 {
+
     public static T GeminiGet<T>(this IOptionsMonitor<T> options, string nodeName) where T : class, new()
     {
 
@@ -16,5 +17,6 @@ public static class OptionsExtension
 
         return options.Get($"{GeminiOptionsRegister<T>.Prefix}:{nodeName}");
     }
+
 }
 

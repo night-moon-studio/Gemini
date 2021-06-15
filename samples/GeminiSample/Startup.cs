@@ -1,3 +1,4 @@
+using GeminiSample.Builder;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,6 +28,7 @@ namespace GeminiSample
         {
             services.AddControllers();
             services.AddGeminiOptions(Configuration);
+            services.ConfigGeminiBuilder<TestBuilder>().ConfigUrl("xxx");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

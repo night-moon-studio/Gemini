@@ -1,13 +1,20 @@
 ﻿using Gemini;
+using Gemini.Builder;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Diagnostics;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtension
     {
-
+        /// <summary>
+        /// 需要被使用, 用于注册所有 Gemini 选项实体
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="configuration">配置实体</param>
         public static void AddGeminiOptions(this IServiceCollection services, IConfiguration configuration)
         {
 
@@ -38,6 +45,32 @@ namespace Microsoft.Extensions.DependencyInjection
                 action(services, configuration);
             }
             GeminiOptionRegisterManagement.OptionsRegisterCache.Clear();
+        }
+
+
+        /// <summary>
+        /// 注册并创建 Builder
+        /// </summary>
+        /// <typeparam name="TBuilder"></typeparam>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static TBuilder ConfigGeminiBuilder<TBuilder>(this IServiceCollection services) where TBuilder : new()
+        {
+            var optionsType = typeof(TBuilder).BaseType.GetGenericArguments()[0];
+            var proxyType = typeof(GeminiBuilderProxy<,>).MakeGenericType(typeof(TBuilder), optionsType);
+            Debug.WriteLine(proxyType.FullName);
+            DynamicMethod method = new DynamicMethod("InitGeminiBuilder" + Guid.NewGuid().ToString(), typeof(TBuilder), new Type[] { typeof(ServiceProvider) });
+            ILGenerator il = method.GetILGenerator();
+            FieldInfo builder = proxyType.GetField("InitBuilder");
+
+            ConstructorInfo ctor = proxyType.GetConstructors()[0];
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Newobj, ctor);
+            il.Emit(OpCodes.Ldfld, builder);
+            il.Emit(OpCodes.Ret);
+            var func = (Func<ServiceProvider, TBuilder>)(method.CreateDelegate(typeof(Func<ServiceProvider, TBuilder>)));
+            return func(services.BuildServiceProvider());
+
         }
 
     }

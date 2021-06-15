@@ -5,6 +5,11 @@ using System.Reflection;
 
 namespace Gemini
 {
+
+    /// <summary>
+    /// 将选项实体生成注册委托
+    /// </summary>
+    /// <typeparam name="TOption"></typeparam>
     public static class GeminiOptionsRegister<TOption> where TOption : class, new()
     {
         public static readonly string Prefix;
@@ -26,7 +31,6 @@ namespace Gemini
                     service.Configure<TOption>(positions[i], config.GetSection(positions[i]));
                 }
                 
-
             };
             GeminiOptionRegisterManagement.OptionsRegisterCache.Add(Register);
         }

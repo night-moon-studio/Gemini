@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 
 namespace Gemini
 {
+
     public class GeminiOptionRegisterManagement
     {
         public static readonly ConcurrentBag<Action<IServiceCollection, IConfiguration>> OptionsRegisterCache;
@@ -13,4 +14,5 @@ namespace Gemini
             OptionsRegisterCache = new ConcurrentBag<Action<IServiceCollection, IConfiguration>>();
         }
     }
+
 }
