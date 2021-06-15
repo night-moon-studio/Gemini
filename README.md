@@ -61,8 +61,10 @@ public class SubOptions
 ```C#
 services.AddGeminiOptions(Configuration);
 
-
+//兼容多种注册接口
+public void Method(IOptions<ParentsOptions> options){ }
 public void Method(IOptionsMonitor<ParentsOptions> options){ }
+public void Method(IOptionsSnapshot<ParentsOptions> options){ }
 ```   
 
 ### 使用 Builder
