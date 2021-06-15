@@ -64,7 +64,13 @@ services.AddGeminiOptions(Configuration);
 //兼容多种注册接口
 public void Method(IOptions<ParentsOptions> options){ }
 public void Method(IOptionsMonitor<ParentsOptions> options){ }
-public void Method(IOptionsSnapshot<ParentsOptions> options){ }
+public void Method(IOptionsSnapshot<ParentsOptions> options)
+{ 
+   _subOptions1 = subMoniter.GeminiGet("InfoNode1");
+   _subOptions2 = subMoniter.Get("MyConfigRoot:InfoTest2");
+}
+
+
 ```   
 
 ### 使用 Builder
