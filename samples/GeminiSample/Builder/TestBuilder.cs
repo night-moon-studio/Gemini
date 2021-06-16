@@ -1,4 +1,5 @@
 ﻿using GeminiSample.Model;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,11 +10,11 @@ namespace GeminiSample.Builder
 {
     public class TestBuilder : IGeminiBuilder<ParentsOptions>
     {
-        protected override void ConfigFunctions()
+
+        public override void ConfigServices(IServiceCollection services)
         {
             Debug.WriteLine(_options.Description);
         }
-
 
         public void ConfigUrl(string x)
         {

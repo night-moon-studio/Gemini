@@ -7,13 +7,15 @@ namespace Gemini.Builder
     public class GeminiBuilderProxy<TBuilder,TOptions> where TBuilder : IGeminiBuilder<TOptions>,new() where TOptions : class, new()
     {
         public TBuilder InitBuilder;
-        public GeminiBuilderProxy(ServiceProvider serviceProvider)
+        public GeminiBuilderProxy(IServiceCollection services)
         {
+
             var builder = new TBuilder();
-            var options = serviceProvider.GetService<IOptionsMonitor<TOptions>>();
+            var options = services.BuildServiceProvider().GetService<IOptionsMonitor<TOptions>>();
             builder.SetOptions(options);
-            builder.ConfigFunctions();
+            builder.ConfigServices(services);
             InitBuilder = builder;
+
         }
     }
 

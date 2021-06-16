@@ -59,7 +59,7 @@ namespace Microsoft.Extensions.DependencyInjection
             var optionsType = typeof(TBuilder).BaseType.GetGenericArguments()[0];
             var proxyType = typeof(GeminiBuilderProxy<,>).MakeGenericType(typeof(TBuilder), optionsType);
             Debug.WriteLine(proxyType.FullName);
-            DynamicMethod method = new DynamicMethod("InitGeminiBuilder" + Guid.NewGuid().ToString(), typeof(TBuilder), new Type[] { typeof(ServiceProvider) });
+            DynamicMethod method = new DynamicMethod("InitGeminiBuilder" + Guid.NewGuid().ToString(), typeof(TBuilder), new Type[] { typeof(IServiceCollection) });
             ILGenerator il = method.GetILGenerator();
             FieldInfo builder = proxyType.GetField("InitBuilder");
 
@@ -68,8 +68,8 @@ namespace Microsoft.Extensions.DependencyInjection
             il.Emit(OpCodes.Newobj, ctor);
             il.Emit(OpCodes.Ldfld, builder);
             il.Emit(OpCodes.Ret);
-            var func = (Func<ServiceProvider, TBuilder>)(method.CreateDelegate(typeof(Func<ServiceProvider, TBuilder>)));
-            return func(services.BuildServiceProvider());
+            var func = (Func<IServiceCollection, TBuilder>)(method.CreateDelegate(typeof(Func<IServiceCollection, TBuilder>)));
+            return func(services);
 
         }
 
