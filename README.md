@@ -81,7 +81,7 @@ public void Method(IOptionsSnapshot<ParentsOptions> options)
 public class TestBuilder : IGeminiBuilder<ParentsOptions>
 {
 
-  protected override void ConfigFunctions()
+  public override void ConfigServices(IServiceCollection services)
   {
     Debug.WriteLine(_options.Description);
   }
