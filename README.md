@@ -10,7 +10,9 @@ Gemini 为 Web 开源工作提供选项框架支持.
 
 ## 使用方法
 
-### 使用 OPTIONS 
+### 1. 引入 `NMS.Gemini` 库.
+
+### 2.使用 OPTIONS 
 
  - #### 定义 OPTIONS
 
@@ -73,7 +75,7 @@ public void Method(IOptionsSnapshot<ParentsOptions> options)
 
 ```   
 
-### 使用 Builder
+### 3.使用 Builder
 
 - #### 实现 IGeminiBuilder   
 
