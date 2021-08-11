@@ -27,8 +27,8 @@ namespace GeminiSample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddGeminiOptions(Configuration);
-            services.ConfigGeminiBuilder<TestBuilder>().ConfigUrl("xxx");
+            services.AddGeminiOptions();
+            services.AddGeminiBuilder<TestBuilder>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,7 +39,7 @@ namespace GeminiSample
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            
 
             app.UseRouting();
 

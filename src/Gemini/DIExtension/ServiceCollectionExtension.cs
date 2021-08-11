@@ -1,78 +1,101 @@
-﻿using Gemini;
-using Gemini.Builder;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtension
     {
+        internal readonly static ConcurrentDictionary<Type, string> _optionsTypeCache;
+        private readonly static MethodInfo _configWithNameMethodInfo;
+        private readonly static MethodInfo _configWithoutNameMethodInfo;
+        static ServiceCollectionExtension()
+        {
+            _optionsTypeCache = new ConcurrentDictionary<Type, string>();
+            _configWithNameMethodInfo = typeof(OptionsConfigurationServiceCollectionExtensions).GetMethod("Configure", new Type[] { typeof(IServiceCollection), typeof(string), typeof(IConfiguration) });
+            _configWithoutNameMethodInfo = typeof(OptionsConfigurationServiceCollectionExtensions).GetMethod("Configure", new Type[] { typeof(IServiceCollection), typeof(IConfiguration) });
+        }
+
+
         /// <summary>
         /// 需要被使用, 用于注册所有 Gemini 选项实体
         /// </summary>
         /// <param name="services"></param>
         /// <param name="configuration">配置实体</param>
-        public static void AddGeminiOptions(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddGeminiBuilder<TBuilder>(this IServiceCollection services,Func<TBuilder, TBuilder> builderAction = null) where TBuilder: IGeminiBuilder,new()
         {
+            TBuilder builder = new TBuilder();
+            builder.SetServiceCollection(services);
+            builder.Configuration();
+            builderAction?.Invoke(builder);
+            return services;
+        }
 
+
+        /// <summary>
+        /// 添加自动选项
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddGeminiOptions(this IServiceCollection services)
+        {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int i = 0; i < assemblies.Length; i += 1)
+            foreach (var asm in assemblies)
             {
-
-                var types = assemblies[i].GetTypes();
-                for (int j = 0; j < types.Length; j += 1)
+                if (!asm.IsDynamic)
                 {
                     try
                     {
-                        var attr = types[j].GetCustomAttribute<GeminiOptionsAttribute>();
-                        if (attr != null)
+                        var types = asm.GetTypes();
+                        foreach (var type in types)
                         {
-                            typeof(GeminiOptionsRegister<>).MakeGenericType(types[j]).GetMethod("Init").Invoke(null,null);
+
+                            var optionsAttr = type.GetCustomAttribute<GeminiOptionsAttribute>();
+                            if (optionsAttr!=default)
+                            {
+                                var positions = optionsAttr.Positions;
+                                if (positions.Length == 1)
+                                {
+                                    var key = positions[0];
+#if DEBUG
+                                    Console.WriteLine($"注册配置 [{key}] 节点类型为 {type.Name}!");
+#endif
+                                    _optionsTypeCache[type] = key;
+                                    var methodInfo = _configWithoutNameMethodInfo.MakeGenericMethod(type);
+                                    methodInfo.Invoke(null, new object[] { services, IConfigurationBuilderExtension.Configuration.GetSection(key) });
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < positions.Length; i += 1)
+                                    {
+
+                                        var key = positions[i];
+#if DEBUG
+                                        Console.WriteLine($"注册配置 [{key}] 节点类型为 {type.Name}!");
+#endif
+                                        _optionsTypeCache[type] = key;
+                                        var methodInfo = _configWithNameMethodInfo.MakeGenericMethod(type);
+                                        methodInfo.Invoke(null, new object[] { services, key, IConfigurationBuilderExtension.Configuration.GetSection(key) });
+
+
+                                    }
+                                }
+
+
+                                
+                            }
+                            
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         continue;
                     }
                 }
             }
-
-            foreach (var action in GeminiOptionRegisterManagement.OptionsRegisterCache)
-            {
-                action(services, configuration);
-            }
-            GeminiOptionRegisterManagement.OptionsRegisterCache.Clear();
+            return services;
         }
-
-
-        /// <summary>
-        /// 注册并创建 Builder
-        /// </summary>
-        /// <typeparam name="TBuilder"></typeparam>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        public static TBuilder ConfigGeminiBuilder<TBuilder>(this IServiceCollection services) where TBuilder : new()
-        {
-            var optionsType = typeof(TBuilder).BaseType.GetGenericArguments()[0];
-            var proxyType = typeof(GeminiBuilderProxy<,>).MakeGenericType(typeof(TBuilder), optionsType);
-            Debug.WriteLine(proxyType.FullName);
-            DynamicMethod method = new DynamicMethod("InitGeminiBuilder" + Guid.NewGuid().ToString(), typeof(TBuilder), new Type[] { typeof(IServiceCollection) });
-            ILGenerator il = method.GetILGenerator();
-            FieldInfo builder = proxyType.GetField("InitBuilder");
-
-            ConstructorInfo ctor = proxyType.GetConstructors()[0];
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Newobj, ctor);
-            il.Emit(OpCodes.Ldfld, builder);
-            il.Emit(OpCodes.Ret);
-            var func = (Func<IServiceCollection, TBuilder>)(method.CreateDelegate(typeof(Func<IServiceCollection, TBuilder>)));
-            return func(services);
-
-        }
-
     }
 
 }

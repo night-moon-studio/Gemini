@@ -20,7 +20,7 @@ namespace GeminiSample.Controllers
         public TestController(IOptionsMonitor<ParentsOptions> parentMonitor,IOptionsMonitor<SubOptions> subMoniter)
         {
             _parentsOptions = parentMonitor.CurrentValue;
-            _subOptions1 = subMoniter.GeminiGet("Info1");
+            _subOptions1 = subMoniter.Get("Gemini:Info1");
             _subOptions2 = subMoniter.Get("Gemini:Info2");
         }
 

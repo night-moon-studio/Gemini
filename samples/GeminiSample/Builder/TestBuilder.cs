@@ -8,17 +8,19 @@ using System.Threading.Tasks;
 
 namespace GeminiSample.Builder
 {
-    public class TestBuilder : IGeminiBuilder<ParentsOptions>
+    public class TestBuilder : IGeminiBuilder
     {
 
-        public override void ConfigServices(IServiceCollection services)
+        public void ConfigClient()
         {
-            Debug.WriteLine(_options.Description);
+            var url = "Client:Url".ConfigString();
+            //XXXClientPool.ConfigGlobalUrl(url);
         }
 
-        public void ConfigUrl(string x)
+        public override void Configuration()
         {
-            Debug.WriteLine(_options.Url);
+            Console.WriteLine("Do sth!");
         }
+
     }
 }

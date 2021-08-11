@@ -9,7 +9,6 @@ public class GeminiOptionsAttribute : Attribute
 {
 
     public string Prefix;
-    public string Root;
     public string[] Positions;
 
     public GeminiOptionsAttribute() { }
@@ -17,19 +16,19 @@ public class GeminiOptionsAttribute : Attribute
     /// 创建选项实体
     /// </summary>
     /// <param name="positions">节点名</param>
-    public GeminiOptionsAttribute(params string[] positions) : this(default, positions, default) { }
+    public GeminiOptionsAttribute(params string[] positions) : this(positions, default) { }
     /// <summary>
     /// 创建选项实体
     /// </summary>
     /// <param name="root">根节点名</param>
     /// <param name="parentsType">父节点类型</param>
-    public GeminiOptionsAttribute(string root, Type parentsType = default) : this(root, default, parentsType) { }
+    public GeminiOptionsAttribute(string root, Type parentsType = default) : this(parentsType, root) { }
     /// <summary>
     /// 创建选项实体
     /// </summary>
     /// <param name="parentsType">父节点类型</param>
     /// <param name="positions">节点名</param>
-    public GeminiOptionsAttribute(Type parentsType, params string[] positions) : this(default, positions, parentsType) { }
+    public GeminiOptionsAttribute(Type parentsType, params string[] positions) : this(positions, parentsType) { }
 
     /// <summary>
     /// 创建选项实体
@@ -37,29 +36,25 @@ public class GeminiOptionsAttribute : Attribute
     /// <param name="root">根节点名</param>
     /// <param name="positions">节点名</param>
     /// <param name="parentsType">父节点类型</param>
-    public GeminiOptionsAttribute(string root, string[] positions, Type parentsType = default)
+    public GeminiOptionsAttribute(string[] positions, Type parentsType = default)
     {
 
-        Positions = positions == default ? new string[0] : positions;
-        Root = root;
+        Positions = positions == default ? new string[1] { "" } : positions;
         if (parentsType != null)
         {
-            var optionsAttr = parentsType.GetCustomAttribute<GeminiOptionsAttribute>();
-
-            if (optionsAttr != null)
+            var parentsAttr = parentsType.GetCustomAttribute<GeminiOptionsAttribute>();
+            if (parentsAttr != null)
             {
-                Prefix = optionsAttr.Root;
                 if (Positions != null)
                 {
                     for (int i = 0; i < Positions.Length; i++)
                     {
-                        Positions[i] = $"{optionsAttr.Root}:{Positions[i]}";
+                        Positions[i] = $"{parentsAttr.Prefix}:{Positions[i]}";
                     }
                 }
-
             }
-            Root = $"{optionsAttr.Root}:{Root}";
         }
+        Prefix = Positions[0];
 
     }
 

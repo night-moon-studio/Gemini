@@ -1,21 +1,36 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-public abstract class IGeminiBuilder<TOptions> where TOptions : class, new()
+/// <summary>
+/// 功能初始化抽象类
+/// </summary>
+public abstract class IGeminiBuilder
 {
-    protected TOptions _options;
+    protected IServiceCollection _service;
+    internal void SetServiceCollection(IServiceCollection service)
+    {
+        _service = service;
+    }
+
 
     /// <summary>
-    /// 调用顺序1
+    /// 获取选项实体
     /// </summary>
-    /// <param name="options"></param>
-    public virtual void SetOptions(IOptionsMonitor<TOptions> options)
+    /// <typeparam name="TOptions"></typeparam>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public TOptions GetOptions<TOptions>(string key = default)
     {
-        _options = options.CurrentValue;
+        if (key == default)
+        {
+            key = ServiceCollectionExtension._optionsTypeCache[typeof(TOptions)];
+        }
+        var section = IConfigurationBuilderExtension.Configuration.GetSection(key);
+        return section.Get<TOptions>();
     }
+
     /// <summary>
-    /// 设置服务,调用顺序2
+    /// 需要被实现,进行必要的初始化
     /// </summary>
-    /// <param name="services"></param>
-    public virtual void ConfigServices(IServiceCollection services) { }
+    public abstract void Configuration();
 }
