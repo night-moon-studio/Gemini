@@ -34,7 +34,8 @@ public class SubOptions
 }
 ```  
 
- - #### 对应的配置文件节点为
+ - #### 对应的配置节点为,也可以使用 AgileConfig 配置中心提供选项来源  
+
 ```json
 {
   "MyConfigRoot": 
@@ -61,47 +62,49 @@ public class SubOptions
  - #### 使用 Gemini 框架进行注册
 
 ```C#
-services.AddGeminiOptions(Configuration);
+//1. 在 Program 中添加如下代码:
+IHostBuilder.ConfigureAppConfiguration((context, config) =>
+{
+ config.AddGeminiConfig();
+})
 
-//兼容多种注册接口
-public void Method(IOptions<ParentsOptions> options){ }
-public void Method(IOptionsMonitor<ParentsOptions> options){ }
-public void Method(IOptionsSnapshot<ParentsOptions> options)
+//2. 在 Startup 中添加如下代码
+services.AddGeminiOptions();
+
+//就可以使用了, 比如在DI初始化中使用
+public Controller(IOptions<ParentsOptions> options){ }
+public Controller(IOptionsMonitor<ParentsOptions> options){ }
+public Controller(IOptionsSnapshot<ParentsOptions> options)
 { 
-   _subOptions1 = subMoniter.GeminiGet("InfoNode1");
-   _subOptions2 = subMoniter.Get("MyConfigRoot:InfoTest2");
+   _subOptions1 = options.Get("MyConfigRoot:InfoTest1");
 }
 
-
+//您可以配合 https://github.com/dotnetcore/AgileConfig 配置中心完成选项实体的配置
 ```   
-
-### 3.使用 Builder
 
 - #### 实现 IGeminiBuilder   
 
 ```C#  
-public class TestBuilder : IGeminiBuilder<ParentsOptions>
+public class TestBuilder : IGeminiBuilder
 {
-
-  public override void ConfigServices(IServiceCollection services)
-  {
-    Debug.WriteLine(_options.Description);
-  }
-
-
-  public void ConfigUrl(string x)
-  {
-    Debug.WriteLine(_options.Url);
-  }
-  
+   //你需要重载这个方法
+   public override void Configuration()
+   {
+       var sqlOption = GetOptions<SqlOption>();
+       //do sth
+       //sql.Init(sqlOption.ConnectionString);
+       //_service.AddScope(.....)
+   }
 }
 ```  
 
 - #### 使用 GeminiBuilder
 
 ```C# 
-//此方法可以包装一层 作为 services 的扩展方法对外提供.
-services.ConfigGeminiBuilder<TestBuilder>().ConfigUrl("xxx");
+//此方法可以包装一层 作为 services 的扩展方法对外提供. 会自动创建 Builder 并调用 builder.Configuration 方法.
+services.AddGeminiBuilder<TestBuilder>();
+services.AddGeminiBuilder<TestBuilder>(builder=>builder.OtherMethod());
+
 
 ```
 <br/>  
