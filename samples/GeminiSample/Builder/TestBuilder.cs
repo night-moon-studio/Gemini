@@ -15,10 +15,15 @@ namespace GeminiSample.Builder
         {
             var url = "Client:Url".ConfigString();
             //XXXClientPool.ConfigGlobalUrl(url);
+
+            
+
         }
 
         public override void Configuration()
         {
+            var redis = GetOptions<GalaxyRedisOptions>();
+            var client = GetOptions<GalaxyOptions>();
             Console.WriteLine("Do sth!");
         }
 
